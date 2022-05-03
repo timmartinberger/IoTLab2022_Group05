@@ -3,6 +3,8 @@ import RPi.GPIO as GPIO
 import random
 from time import sleep
 
+# Versuch 1.2 - Aufgabe 2 und 3
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(17, GPIO.OUT)
 GPIO.setup(18, GPIO.OUT)
@@ -19,7 +21,7 @@ class LED(threading.Thread):
         self.blinking = False
         self.pwm_signal = GPIO.PWM(self.pin, self.frequency)
 
-        
+
 
     def blink(self):
         self.blinking = True
@@ -29,7 +31,7 @@ class LED(threading.Thread):
                 random_frequency = random.randint(1,10)
                 self.pwm_signal.ChangeFrequency(random_frequency)
             sleep(0.1)
-        
+
 
     def run(self):
         self.blink()
@@ -51,8 +53,6 @@ def restart_led(led):
     
 def control_leds():
 
-    #define the button
-
     led1 = LED(17, 1)
     led2 = LED(18, 1)
 
@@ -71,6 +71,9 @@ def control_leds():
 
 if __name__ == "__main__":
     try:
+        "Start blinking of LEDs at GPIO pins 17 and 18..."
         control_leds()
+    except KeyboardInterrupt:
+        "Stopped blinking!"
     finally:
         GPIO.cleanup()
