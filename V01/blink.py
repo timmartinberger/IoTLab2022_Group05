@@ -1,3 +1,5 @@
+# Versuch 1.2 - Aufgabe 1
+
 import RPi.GPIO as GPIO
 from time import sleep
 import sys
@@ -19,6 +21,7 @@ def blink():
 
 if __name__ == "__main__":
     try:
+        print("Start blinking of LEDs on GPIO pins 17 and 18...")
         blink()
 
     # How to handle keyboard interrupt:
