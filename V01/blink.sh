@@ -1,8 +1,8 @@
 #!/bin/bash
-# Versuch 01 - Aufgabe 5
+# Versuch 1.1 - Aufgabe 5
 
 if [[ ! $(ps -ef | grep -v grep | grep pigpiod) ]]; then
-	sudo pigpiod
+	sudo systemctl start pigpiod
 	echo "Starting pigpiod deamon..."
 else
 	echo "Pigpiod deamon is running. Start blinking..."
