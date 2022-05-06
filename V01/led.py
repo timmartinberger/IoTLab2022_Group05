@@ -21,8 +21,6 @@ class LED(threading.Thread):
         self.blinking = False
         self.pwm_signal = GPIO.PWM(self.pin, self.frequency)
 
-
-
     def blink(self):
         self.blinking = True
         self.pwm_signal.start(1)
@@ -32,30 +30,20 @@ class LED(threading.Thread):
                 self.pwm_signal.ChangeFrequency(random_frequency)
             sleep(0.1)
 
-
     def run(self):
         self.blink()
 
 
-def main():
-    led = LED(17, 1)
-    led.start()
-    sleep(5)
-    led.blinking = False
-    led.join()
-
 def restart_led(led):
     led.blinking = False
-
     random_frequency = random.randint(1, 10)
     led.frequency = random_frequency
     led.run()
-    
-def control_leds():
 
+
+def control_leds():
     led1 = LED(17, 1)
     led2 = LED(18, 1)
-
     led1.start()
     led2.start()
 
@@ -67,6 +55,17 @@ def control_leds():
 
     led1.join()
     led2.join()
+
+
+def main():
+    # Aufgabe 2
+    pin = input("Enter the GPIO pin for your led: ")
+    freq = input("Enter the desired frequency: ")
+    led = LED(pin, freq)
+    led.start()
+    sleep(5)
+    led.blinking = False
+    led.join()
 
 
 if __name__ == "__main__":
