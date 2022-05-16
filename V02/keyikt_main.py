@@ -21,8 +21,8 @@ speed_cur = 0
 angle_cur = 0
 
 # Initialize motors for vehicle control
-# driving = Motor(1)
-# steering = Steering(2)
+driving = Motor(1)
+steering = Steering(2)
 MOUSE_LEFT = 1
 # Start pygame stuff
 
@@ -251,8 +251,8 @@ try:
             keyboard_update_speed()
             keyboard_update_angle()
 
-        # driving.set_speed(speed_cur)
-        # steering.set_angle(angle_cur)
+        driving.set_speed(speed_cur)
+        steering.set_angle(angle_cur)
 
         print("({},{} --> {})".format(speed_cur, angle_cur, (speed_cur - last) / delta))
     
