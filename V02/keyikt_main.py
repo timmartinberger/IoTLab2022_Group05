@@ -7,8 +7,8 @@ import math
 import pygame
 from servo_ctrl import Steering, Motor
 
-width = 400.0
-height = 200.0
+width = 400
+height = 200
 
 freq = 50  # Sets the frequency of input procession
 delta = 1.0 / freq # time per step
@@ -23,7 +23,7 @@ angle_cur = 0
 # Initialize motors for vehicle control
 driving = Motor(1)
 steering = Steering(2)
-
+MOUSE_LEFT = 1
 # Start pygame stuff
 
 # start main pygame event processing loop here
@@ -184,7 +184,7 @@ try:
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == pygame.BUTTON_LEFT:
+                if event.button == MOUSE_LEFT:
                     keystates['mouse_left'] = True
             # check for key down events (press)
             if event.type == pygame.KEYDOWN:
@@ -222,7 +222,7 @@ try:
                 print("Keydown")
 
             if event.type == pygame.MOUSEBUTTONUP:
-                if event.button == pygame.BUTTON_LEFT:
+                if event.button == MOUSE_LEFT:
                     keystates['mouse_left'] = False
             # check for key up events (release)
             if event.type == pygame.KEYUP:

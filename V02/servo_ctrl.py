@@ -21,12 +21,16 @@ class Motor(object):
         return
 
     def set_speed(self, speed):
-        if speed == -11:
-            write(self.servo, 100)
-        elif speed == 11:
-            write(self.servo, 200)
-        else:
-            write(self.servo, 150)
+        speed = speed + 11
+        multiplicator = speed / 22
+        write(self.servo, 100 * multiplicator + 100)
+
+        # if speed == -11:
+        #     write(self.servo, 100)
+        # elif speed == 11:
+        #     write(self.servo, 200)
+        # else:
+        #     write(self.servo, 150)
 
     def stop(self):
         write(self.servo, 150)
@@ -41,12 +45,15 @@ class Steering(object):
         self.servo = servo
 
     def set_angle(self, angle):
-        if angle == -45:
-            write(self.servo, 115)
-        elif angle == 45:
-            write(self.servo, 195)
-        else:
-            write(self.servo, 155)
+        angle = angle + 45
+        multiplicator = angle/90
+        write(self.servo, 80 * multiplicator + 115)
+        # if angle == -45:
+        #     write(self.servo, 115)
+        # elif angle == 45:
+        #     write(self.servo, 195)
+        # else:
+        #     write(self.servo, 155)
 
     def stop(self):
         write(self.servo, 155)
