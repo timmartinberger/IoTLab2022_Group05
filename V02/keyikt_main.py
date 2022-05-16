@@ -61,7 +61,7 @@ def keyboard_update_speed():
             speed_cur = 11
         elif keystates['dec']:
             speed_cur = -11
-        if not keystates['acc'] and not keystates['dec'] and speed_cur > 0:
+        if not keystates['acc'] and not keystates['dec']:
             speed_cur = 0
 
 
