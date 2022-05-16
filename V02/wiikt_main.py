@@ -88,11 +88,11 @@ class SteeringThread(threading.Thread):
 
 			if steering_angle >= 0:
 				steering_angle = min(steering_angle, self.control_boundaries['deflection'])
-				print steering_angle
+				# print steering_angle
 				steering.set_angle(steering_angle)
 			else:
 				steering_angle = max(steering_angle, -self.control_boundaries['deflection'])
-				print steering_angle
+				# print steering_angle
 				steering.set_angle(steering_angle)
 			
 			sleep(0.1)
@@ -169,19 +169,21 @@ try:
 		### forward backward
 		if (wiistate.ButtonState.One):
 			print 'forward'
-			motor.set_speed(control_boundaries['velocity'])
+			print motor.set_speed(control_boundaries['velocity'])
 			sleep(sleep_time)
 		
 		if (wiistate.ButtonState.Two):
 			print 'backward'
-			motor.set_speed(-control_boundaries['velocity'])
+			print motor.set_speed(-control_boundaries['velocity'])
 			sleep(sleep_time)
 
 		### reset 
 		if (wiistate.ButtonState.Minus):
 			print 'reset'
-			control_boundaries['deflection'] = 0
+			control_boundaries['deflection'] = MAX_DEFLECTION
 			control_boundaries['velocity'] = 0
+			motor.set_speed(control_boundaries['velocity'])
+			steering.set_angle(0)
 			sleep(sleep_time)
 	stearing_thread.join()
 
