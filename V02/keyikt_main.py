@@ -48,7 +48,7 @@ def keyboard_update_speed():
     max_speed = 11.0  # in m/s
     global speed_cur
     if keystates['simulated_mode']:
-        if 0 <= speed_cur:
+        if 0 < speed_cur:
             if keystates['acc']:
                 final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
             if keystates['dec']:
@@ -57,15 +57,21 @@ def keyboard_update_speed():
                 final_acc = frict/2.0 * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (4.0 ** 2.0))))
             new_speed = speed_cur + final_acc * delta
             speed_cur = max(0, min(11, new_speed))
-        else:
+        elif 0 > speed_cur:
             if keystates['acc']:
                 final_acc = dec * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
-            if keystates['dec'] and speed_cur > 0:
+            if keystates['dec']:
                 final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
-            if not keystates['acc'] and not keystates['dec'] and speed_cur > 0:
+            if not keystates['acc'] and not keystates['dec'] and speed_cur < 0:
                 final_acc = frict / 2.0 * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (4.0 ** 2.0))))
             new_speed = speed_cur - final_acc * delta
             speed_cur = max(-11, min(0, new_speed))
+        else:
+            final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+            if keystates['acc']:
+                speed_cur = speed_cur + final_acc * delta
+            if keystates['dec']:
+                speed_cur = speed_cur - final_acc * delta
     else:
         if keystates['acc'] and not speed_cur >= max_speed:
             speed_cur = 11
@@ -106,7 +112,7 @@ def keyboard_update_angle():
 def mouse_update_angle(x):
     global angle_cur
     max_angle = 45
-    angle_at_mouse_pos = (x / (width-1)) * max_angle * 2 - max_angle
+    angle_at_mouse_pos = (x / (width-1.0)) * max_angle * 2 - max_angle
     if keystates['simulated_mode']:
         if keystates['mouse_left']:
             if angle_at_mouse_pos >= 0:
@@ -129,15 +135,24 @@ def mouse_update_angle(x):
 def mouse_update_speed(y):
     global speed_cur
     max_speed = 11
-    max_speed_on_mouse_pos = -((y / (height-1)) * max_speed * 2 - max_speed)
+    max_speed_on_mouse_pos = -((y / (height-1.0)) * max_speed * 2 - max_speed)
     if keystates['simulated_mode']:
         if keystates['mouse_left']:
             if speed_cur <= max_speed_on_mouse_pos:
-                final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
-                speed_cur = min(speed_cur + final_acc * delta, max_speed_on_mouse_pos)
+                if speed_cur >= 0:
+                    final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+                    speed_cur = min(speed_cur + final_acc * delta, max_speed_on_mouse_pos)
+                elif speed_cur < 0:
+                    final_acc = dec * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+                    speed_cur = min(speed_cur - final_acc * delta, max_speed_on_mouse_pos)
             else:
-                final_acc = dec * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
-                speed_cur = max(speed_cur + final_acc * delta, 0)
+                if speed_cur > 0:
+                    final_acc = dec * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+                    speed_cur = max(speed_cur + final_acc * delta, 0)
+                elif speed_cur <= 0:
+                    final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+                    speed_cur = max(speed_cur - final_acc * delta, max_speed_on_mouse_pos)
+
         else:
             friction = frict/2.0 * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (4.0 ** 2.0))))
             speed_cur = max(speed_cur + friction * delta, 0)
