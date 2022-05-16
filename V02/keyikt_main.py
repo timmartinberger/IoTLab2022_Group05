@@ -8,15 +8,15 @@ import threading
 import time
 import pygame
 
-width = 400
-height = 200
+width = 400.0
+height = 200.0
 
 freq = 50  # Sets the frequency of input procession
 delta = 1.0 / freq # time per step
 acc = 2.6  # Max acceleration of the car (per sec.)
 dec = -4.5  # Max deceleration of the car (per sec.)
-frict = -1  # max friction
-angle_acc = 300  # max change of angle (per sec.)
+frict = -1.0  # max friction
+angle_acc = 300.0  # max change of angle (per sec.)
 
 speed_cur = 0
 angle_cur = 0
@@ -36,24 +36,105 @@ clock = pygame.time.Clock()
 
 
 # States of the keys
-keystates = {'quit': False, 'acc': False, 'dec': False}
+keystates = {'quit': False, 'simulated_mode': True, 'mouse_control_on': False, 'mouse_left': False, 'acc': False, 'dec': False, 'left': False, 'right': False}
 
 # Exercises -----------------------------------------------
 
 
-# 1. Update speed
-def update_speed():
+# 1. Update speed depending on pressed key 'w'/'s'
+def keyboard_update_speed():
     final_acc = 0.0
     max_speed = 11.0  # in m/s
     global speed_cur
-    if keystates['acc'] and not speed_cur >= max_speed:
-        final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
-    if keystates['dec'] and speed_cur > 0:
-        final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
-    if not keystates['acc'] and not keystates['dec'] and speed_cur > 0:
-        final_acc = frict/2.0 * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (4.0 ** 2.0))))
-    new_speed = speed_cur + final_acc * delta
-    speed_cur = max(0, min(11, new_speed))
+    if keystates['simulated_mode']:
+        if keystates['acc'] and max_speed > speed_cur >= 0:
+            final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+        if keystates['dec'] and speed_cur > 0:
+            final_acc = dec * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+        if not keystates['acc'] and not keystates['dec'] and speed_cur > 0:
+            final_acc = frict/2.0 * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (4.0 ** 2.0))))
+        new_speed = speed_cur + final_acc * delta
+        speed_cur = max(0, min(11, new_speed))
+    else:
+        if keystates['acc'] and not speed_cur >= max_speed:
+            speed_cur = 11
+        elif keystates['dec']:
+            speed_cur = -11
+        if not keystates['acc'] and not keystates['dec'] and speed_cur > 0:
+            speed_cur = 0
+
+
+# 2. Update angle depending on pressed key 'a'/'d'
+def keyboard_update_angle():
+    global angle_cur
+    max_angle = 45
+    if keystates['simulated_mode']:
+        if keystates['left'] and angle_cur > -max_angle:
+            new_angle = angle_cur - angle_acc * delta
+            angle_cur = max(-max_angle, new_angle)
+        if keystates['right'] and angle_cur < max_angle:
+            new_angle = angle_cur + angle_acc * delta
+            angle_cur = min(max_angle, new_angle)
+        if not keystates['left'] and not keystates['right']:
+            if angle_cur < 0:
+                new_angle = angle_cur + angle_acc * delta
+                angle_cur = min(0, new_angle)
+            elif angle_cur > 0:
+                new_angle = angle_cur - angle_acc * delta
+                angle_cur = max(0, new_angle)
+    else:
+        if keystates['left']:
+            angle_cur = -45
+        elif keystates['right']:
+            angle_cur = 45
+        else:
+            angle_cur = 0
+
+
+# 3. Calculate angle depending on mouse position
+def mouse_update_angle(x):
+    global angle_cur
+    max_angle = 45
+    angle_at_mouse_pos = (x / (width-1)) * max_angle * 2 - max_angle
+    if keystates['simulated_mode']:
+        if keystates['mouse_left']:
+            if angle_at_mouse_pos >= 0:
+                new_angle = angle_cur + angle_acc * delta
+                angle_cur = min(angle_at_mouse_pos, new_angle)
+            else:
+                new_angle = angle_cur - angle_acc * delta
+                angle_cur = max(angle_at_mouse_pos, new_angle)
+        else:
+            angle_cur = 0
+    else:
+        if keystates['mouse_left']:
+            angle = max_angle if abs(angle_at_mouse_pos) > 10 else 0
+            angle_cur = angle if angle_at_mouse_pos > 0 else -angle
+        else:
+            angle_cur = 0
+
+
+# 3. Calculate speed depending on mouse position
+def mouse_update_speed(y):
+    global speed_cur
+    max_speed = 11
+    max_speed_on_mouse_pos = -((y / (height-1)) * max_speed * 2 - max_speed)
+    if keystates['simulated_mode']:
+        if keystates['mouse_left']:
+            if speed_cur <= max_speed_on_mouse_pos:
+                final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+                speed_cur = min(speed_cur + final_acc * delta, max_speed_on_mouse_pos)
+            else:
+                final_acc = dec * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+                speed_cur = max(speed_cur + final_acc * delta, 0)
+        else:
+            friction = frict/2.0 * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (4.0 ** 2.0))))
+            speed_cur = max(speed_cur + friction * delta, 0)
+    else:
+        if keystates['mouse_left']:
+            speed_cur = max_speed if max_speed_on_mouse_pos > 0 else -max_speed
+        else:
+            speed_cur = 0
 
 # OLD CODE (with threading) - Start ----------------------
 # # 1. acceleration
@@ -97,28 +178,51 @@ try:
      
         # process input events
         for event in pygame.event.get():
-        
+
             # exit on quit
             if event.type == pygame.QUIT:
                 running = False
-
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == pygame.BUTTON_LEFT:
+                    keystates['mouse_left'] = True
             # check for key down events (press)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     keystates['quit'] = True
-                # Start acceleration
-                if event.key == pygame.K_w:
-                    keystates['acc'] = True
-                    pygame.event.set_blocked(pygame.KEYDOWN)
-                # Start deceleration
-                if event.key == pygame.K_s:
-                    keystates['dec'] = True
-                    pygame.event.set_blocked(pygame.KEYDOWN)
                 # Reset speed
                 if event.key == pygame.K_r:
                     speed_cur = 0
+                    angle_cur = 0
+                    keystates['mouse_control_on'] = False
+                    print("Reset...")
+                    continue
+                # toggle between actual control and simulated mode
+                if event.key == pygame.K_t:
+                    keystates['simulated_mode'] = not keystates['simulated_mode']
+                # Start mouse control
+                if event.key == pygame.K_m:
+                    keystates['mouse_control_on'] = True
+                    print ("Starting mouse control...")
+                # Start acceleration
+                if event.key == pygame.K_w:
+                    keystates['acc'] = True
+                    # pygame.event.set_blocked(pygame.KEYDOWN)
+                    pygame.event.set_allowed(pygame.KEYDOWN)
+                # Start deceleration
+                if event.key == pygame.K_s:
+                    keystates['dec'] = True
+                    # pygame.event.set_blocked(pygame.KEYDOWN)
+                # Start left turn
+                if event.key == pygame.K_a:
+                    keystates['left'] = True
+                # Start right turn
+                if event.key == pygame.K_d:
+                    keystates['right'] = True
                 print("Keydown")
 
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == pygame.BUTTON_LEFT:
+                    keystates['mouse_left'] = False
             # check for key up events (release)
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_q:
@@ -126,17 +230,30 @@ try:
                 # Stop acceleration
                 if event.key == pygame.K_w:
                     keystates['acc'] = False
-                    pygame.event.set_allowed(pygame.KEYDOWN)
                 # Stop deceleration
                 if event.key == pygame.K_s:
                     keystates['dec'] = False
-                    pygame.event.set_allowed(pygame.KEYDOWN)
+                # Stop left turn
+                if event.key == pygame.K_a:
+                    keystates['left'] = False
+                # Stop right turn
+                if event.key == pygame.K_d:
+                    keystates['right'] = False
 
-        # do something about the key states here, now that the event queue has been processed
+        # Quit the input processing
         if keystates['quit']:
             running = False
-        # update speed depending on keystates
-        update_speed()
+        if keystates['mouse_control_on']:
+            # update depending on keystates
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            mouse_update_angle(mouse_x)
+            mouse_update_speed(mouse_y)
+            print(mouse_x)
+        else:
+            # update depending on keystates
+            keyboard_update_speed()
+            keyboard_update_angle()
+
         print("({},{} --> {})".format(speed_cur, angle_cur, (speed_cur - last) / delta))
     
 except KeyboardInterrupt:
