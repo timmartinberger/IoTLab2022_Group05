@@ -24,8 +24,10 @@ class Motor(object):
         speed = 11 if speed > 11 else speed
         speed = -11 if speed < -11 else speed
         speed = speed + 11
-        multiplicator = speed / 22
-        write(self.servo, 100 * multiplicator + 100)
+        multiplicator = speed / 22.0
+        pwm = 100 * multiplicator + 100
+        write(self.servo, pwm)
+        return pwm
 
     def stop(self):
         write(self.servo, 150)
@@ -43,8 +45,10 @@ class Steering(object):
         angle = 45 if angle > 45 else angle
         angle = -45 if angle < -45 else angle
         angle = angle + 45
-        multiplicator = angle/90
-        write(self.servo, 80 * multiplicator + 115)
+        multiplicator = angle / 90.0
+        pwm = 80 * multiplicator + 115
+        write(self.servo, pwm)
+        return pwm
 
     def stop(self):
         write(self.servo, 155)

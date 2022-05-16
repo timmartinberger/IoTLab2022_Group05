@@ -15,11 +15,12 @@ def test_motor():
     for velocity in velocities:
         print "set speed to: ", velocity
 
-        motor.set_speed(velocity)
+        pwm = motor.set_speed(velocity)
+        print "got ", pwm, " as pwm"
         enter_to_continue()
 
 def test_steering():
-    steering = Steering(2)
+    steering = Steering(1)
     angles = [-3, 18, 51.7, 0, -44.2]
 
     print "testing the steering"
@@ -27,7 +28,8 @@ def test_steering():
     for angle in angles:
         print "set angle to: ", angle
 
-        steering.set_angle(angle)
+        pwm = steering.set_angle(angle)
+        print "got ", pwm, " as pwm"
         enter_to_continue()
 
 if __name__ == "__main__":
