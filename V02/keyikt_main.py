@@ -21,8 +21,8 @@ speed_cur = 0
 angle_cur = 0
 
 # Initialize motors for vehicle control
-driving = Motor(1)
-steering = Steering(2)
+# driving = Motor(1)
+# steering = Steering(2)
 MOUSE_LEFT = 1
 # Start pygame stuff
 
@@ -48,14 +48,24 @@ def keyboard_update_speed():
     max_speed = 11.0  # in m/s
     global speed_cur
     if keystates['simulated_mode']:
-        if keystates['acc'] and max_speed > speed_cur >= 0:
-            final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
-        if keystates['dec'] and speed_cur > 0:
-            final_acc = dec * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
-        if not keystates['acc'] and not keystates['dec'] and speed_cur > 0:
-            final_acc = frict/2.0 * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (4.0 ** 2.0))))
-        new_speed = speed_cur + final_acc * delta
-        speed_cur = max(0, min(11, new_speed))
+        if 0 <= speed_cur:
+            if keystates['acc']:
+                final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+            if keystates['dec']:
+                final_acc = dec * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+            if not keystates['acc'] and not keystates['dec'] and speed_cur > 0:
+                final_acc = frict/2.0 * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (4.0 ** 2.0))))
+            new_speed = speed_cur + final_acc * delta
+            speed_cur = max(0, min(11, new_speed))
+        else:
+            if keystates['acc']:
+                final_acc = dec * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+            if keystates['dec'] and speed_cur > 0:
+                final_acc = acc * (1.0 - (1.0 / 2.0) * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (2.5 ** 2.0)))))
+            if not keystates['acc'] and not keystates['dec'] and speed_cur > 0:
+                final_acc = frict / 2.0 * (1.0 + math.erf((abs(speed_cur) - max_speed / 2.0) / math.sqrt(2.0 * (4.0 ** 2.0))))
+            new_speed = speed_cur - final_acc * delta
+            speed_cur = max(-11, min(0, new_speed))
     else:
         if keystates['acc'] and not speed_cur >= max_speed:
             speed_cur = 11
@@ -137,34 +147,6 @@ def mouse_update_speed(y):
         else:
             speed_cur = 0
 
-# OLD CODE (with threading) - Start ----------------------
-# # 1. acceleration
-# def increase_speed():
-#     max_speed = 11 # in m/s
-#     global speed_cur
-#     while keystates['acc'] and not speed_cur >= max_speed:
-#         speed_after_acc = speed_cur + acc * delta
-#         speed_cur = speed_after_acc if max_speed > speed_after_acc else max_speed
-#         time.sleep(delta)
-#
-#
-# # 1. deceleration
-# def decrease_speed():
-#     global speed_cur
-#     while keystates['dec'] and not speed_cur <= 0:
-#         speed_after_dec = speed_cur + dec * delta
-#         speed_cur = speed_after_dec if 0 < speed_after_dec else 0
-#         time.sleep(delta)
-#
-#
-# # 1. friction
-# def speed_after_friction():
-#     global speed_cur
-#     while not keystates['acc'] and not keystates['dec'] and not speed_cur <= 0:
-#         speed_after_acc = speed_cur - frict * delta
-#         speed_cur = speed_after_acc if 0 < speed_after_acc else 0
-#         time.sleep(delta)
-# OLD CODE - End -----------------------------------------
 # --------------------------------------------------------
 
 
@@ -254,8 +236,8 @@ try:
             keyboard_update_speed()
             keyboard_update_angle()
 
-        driving.set_speed(speed_cur)
-        steering.set_angle(angle_cur)
+        # driving.set_speed(speed_cur)
+        # steering.set_angle(angle_cur)
 
         print("({},{} --> {})".format(speed_cur, angle_cur, (speed_cur - last) / delta))
     
