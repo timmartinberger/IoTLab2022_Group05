@@ -4,9 +4,8 @@
 #                            Aufgabe 1                                #
 #######################################################################
 import math
-import threading
-import time
 import pygame
+from servo_ctrl import Steering, Motor
 
 width = 400.0
 height = 200.0
@@ -21,7 +20,9 @@ angle_acc = 300.0  # max change of angle (per sec.)
 speed_cur = 0
 angle_cur = 0
 
-
+# Initialize motors for vehicle control
+driving = Motor(1)
+steering = Steering(2)
 
 # Start pygame stuff
 
@@ -248,11 +249,13 @@ try:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             mouse_update_angle(mouse_x)
             mouse_update_speed(mouse_y)
-            print(mouse_x)
         else:
             # update depending on keystates
             keyboard_update_speed()
             keyboard_update_angle()
+
+        driving.set_speed(speed_cur)
+        steering.set_angle(angle_cur)
 
         print("({},{} --> {})".format(speed_cur, angle_cur, (speed_cur - last) / delta))
     
