@@ -1,6 +1,6 @@
 import socket
 # Port des Servers
-PORT = x
+PORT = 8000
 # Lesepuffergr\"o\ss e
 BUFFER_SIZE = 1400
 # Unterst\"utzte Addresstypen (IPv4, IPv6, lokale Addressen)
@@ -14,7 +14,9 @@ socket_type = socket_types[0]
 backlog = 1
 # Erstellen eines Socket (TCP und UDP)
 sock = socket.socket(address_family, socket_type)
-sock.bind((’’, PORT))
+sock.bind(('192.168.0.11', PORT))
+
+
 # Lausche am Socket auf eingehende Verbindungen (Nur TCP)
 sock.listen(backlog)
 clientsocket, address = sock.accept()

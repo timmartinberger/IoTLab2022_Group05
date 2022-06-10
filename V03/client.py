@@ -1,7 +1,9 @@
 import socket
+from server import address_families, socket_types
 # IP und Port des Servers
-IP = '172.23.x.x'
-PORT = x
+IP = '192.168.0.11'
+PORT = 8000
+
 # Passenden Address- und Sockettyp w\"ahlen
 address_family = address_families[0]
 socket_type = socket_types[0]
