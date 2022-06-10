@@ -1,10 +1,10 @@
 import subprocess
 BUFFER_SIZE = 1400
 # raspivid starten
-cmd_raspivid = ''
+cmd_raspivid = 'raspivid -t 0 -fps 20 -w 1280 -h 720 -b 2000000 -o -'
 rasprocess = subprocess.Popen(cmd_raspivid,shell=True,stdout=subprocess.PIPE)
 # mplayer starten
-cmd_mplayer = ''
+cmd_mplayer = 'mplayer -fps 25 -cache 512 -'
 mprocess = subprocess.Popen(cmd_mplayer, shell=True, stdin=subprocess.PIPE)
 while True:
     # Daten der Gr\"o\ss e BUFFER_SIZE aus der Ausgabe von raspivid auslesen
