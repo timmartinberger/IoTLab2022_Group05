@@ -1,4 +1,5 @@
 import socket
+from time import sleep
 from common import address_families, socket_types
 
 # IP und Port des Servers
@@ -14,8 +15,9 @@ sock = socket.socket(address_family, socket_type)
 sock.connect((IP,PORT))
 # Sende immer wieder "Hello" an den Server
 while True:
-    message = "Hello"
+    message = b"Hello\n"
     # TCP
     sock.send(message)
     # UDP
     sock.sendto(message, (IP, PORT))
+    sleep(1)
