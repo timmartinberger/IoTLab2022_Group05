@@ -1,5 +1,6 @@
 import socket
-from server import address_families, socket_types
+from common import address_families, socket_types
+
 # IP und Port des Servers
 IP = '192.168.0.11'
 PORT = 8000
