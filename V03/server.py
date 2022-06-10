@@ -24,5 +24,5 @@ while True:
     data = clientsocket.recv(BUFFER_SIZE)
     print(data)
     # UDP:
-    data, address = sock.recvfrom(BUFFER_SIZE)
-    print(data)
+    # data, address = sock.recvfrom(BUFFER_SIZE)
+    # print(data)
