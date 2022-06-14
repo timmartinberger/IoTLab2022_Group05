@@ -204,12 +204,9 @@ try:
                 # Start acceleration
                 if event.key == pygame.K_w:
                     keystates['acc'] = True
-                    # pygame.event.set_blocked(pygame.KEYDOWN)
-                    pygame.event.set_allowed(pygame.KEYDOWN)
                 # Start deceleration
                 if event.key == pygame.K_s:
                     keystates['dec'] = True
-                    # pygame.event.set_blocked(pygame.KEYDOWN)
                 # Start left turn
                 if event.key == pygame.K_a:
                     keystates['left'] = True
