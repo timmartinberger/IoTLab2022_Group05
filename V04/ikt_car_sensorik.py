@@ -4,11 +4,15 @@ from time import time, sleep
 import threading
 import RPi.GPIO as GPIO
 import smbus
+import math
 
 GPIO.setmode(GPIO.BCM)
 
 # 1 indicates /dev/i2c-1 (port I2C1)
 bus = smbus.SMBus(1)
+
+def combine_high_low(high, low):
+    return (high << 8) | low
 
 
 #################################################################################
@@ -29,19 +33,25 @@ class Ultrasonic():
     #
     # Diese Methode soll ein Datenbyte an den Ultraschallsensor senden um eine Messung zu starten
     def write(self, value):
-        return 0
+        bus.write_byte_data(self.address, 0x00, 0x51)
+        sleep(0.07)
 
     # Aufgabe 2
     #
     # Diese Methode soll den Lichtwert auslesen und zurueckgeben.
     def get_brightness(self):
-        return 0
+        light_v = bus.read_byte_data(self.address, 0x01)
+        return light_v
 
     # Aufgabe 2
     #
     # Diese Methode soll die Entfernung auslesen und zurueckgeben.
     def get_distance(self):
-        return 0
+        range_High_Byte = bus.read_byte_data(address_SRF_v, 0x02)  # höherwertiges Byte
+        range_Low_Byte = bus.read_byte_data(address_SRF_v, 0x03)  # niederwertiges Byte
+
+        return combine_high_low(range_High_Byte, range_Low_Byte)
+
 
     def get_address(self):
         return self.address
@@ -87,7 +97,10 @@ class Compass(object):
     #
     # Diese Methode soll den Kompasswert auslesen und zurueckgeben.
     def get_bearing(self):
-        return 0
+        bear_High_Byte = bus.read_byte_data(self.address, 2)  # höherwertiges Byte
+        bear_Low_Byte = bus.read_byte_data(self.address, 3)  # niederwertiges Byte
+
+        return combine_high_low(bear_High_Byte, bear_Low_Byte)
 
 
 class CompassThread(threading.Thread):
@@ -127,17 +140,13 @@ class Infrared(object):
     #
     # In dieser Methode soll der gemessene Spannungswert des Infrarotsensors ausgelesen werden.
     def get_voltage(self):
-        return 0
+        distance_IR_voltage = bus.read_byte(address_IR)
+        return distance_IR_voltage
 
     # Aufgabe 3
     #
     # Der Spannungswert soll in einen Distanzwert umgerechnet werden.
     def get_distance(self):
-        '''
-        Der Wertebereich der Spannung liegt zwischen 0x00 (0 Volt) und 0xFF (5 Volt).
-        Der Spannungswert entspricht Distanzen zwischen 10cm und 80cm.
-        
-        '''
         return 0
 
 
@@ -184,27 +193,33 @@ class InfraredThread(threading.Thread):
 class Encoder(object):
     ''' This class is responsible for handling encoder data '''
 
+    # number of encoder steps
+    count = 16.0
+
     # Aufgabe 2
     #
     # Wieviel cm betraegt ein einzelner Encoder-Schritt?
-    STEP_LENGTH = 0  # in cm
+    STEP_LENGTH = math.pi * 5 / count  # in cm
 
-    # number of encoder steps
-    count = 0
 
     def __init__(self, pin):
         self.pin = pin
+        self.steps_travelled = 0
+        GPIO.add_event_detect(encoder_pin, GPIO.BOTH, callback=self.count, bouncetime=1)
+
 
     # Aufgabe 2
     #
     # Jeder Flankenwechsel muss zur Berechnung der Entfernung gezaehlt werden.
     # Definieren Sie alle dazu noetigen Methoden.
+    def count(channel):
+        self.steps_travelled += 1
 
     # Aufgabe 2
     #
     # Diese Methode soll die gesamte zurueckgelegte Distanz zurueckgeben.
     def get_travelled_dist(self):
-        return 0
+        return self.steps_travelled * STEP_LENGTH
 
 
 class EncoderThread(threading.Thread):
@@ -243,9 +258,11 @@ class EncoderThread(threading.Thread):
 if __name__ == "__main__":
     # The GPIO pin to which the encoder is connected
     encoder_pin = 23
+    GPIO.setup(encoder_pin, GPIO.IN)
 
     # Aufgabe 1
-    # ToDo: Tragen Sie die i2c Adressen der Sensoren hier ein
+    #
+    # Tragen Sie die i2c Adressen der Sensoren hier ein
 
     # The i2c addresses of front and rear ultrasound sensors
     ultrasonic_front_i2c_address = 0x00;
