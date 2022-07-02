@@ -1,0 +1,67 @@
+<!--HTML Seite, die das Video und saemtliche Zustandsdaten des Raspberry Pi anzeigt-->
+
+<!DOCTYPE HTML>
+<html>
+  <head>
+	<title>IKT CAR MONITORING</title>
+	<style>
+		body {
+			background: #555;
+			text-align: left;
+			margin-top: 1%;
+			zoom: 100%;
+			
+		}
+		p    {color:white;max-width: 50%;}
+		th    {color:white;}
+		#column {
+		
+		width: 50%;  
+		float: left;
+
+		position: relative;
+	}
+	</style>	
+	
+  </head>
+
+
+  <body>
+	
+	<script type="text/javascript" src="smoothie.js"></script>
+
+	<!--Aufgabe 4-->
+	<!--Für jeden Datensatz muss eine Zeichenfläche 'canvas' definiert werden-->
+
+
+	<!--Einparken -->
+	<!--Es müssen Knöpfe zum Starten und Stoppen des Parkvorgangs definiert werden-->
+	
+	<script type="text/javascript">
+		// Aufgabe 4
+		//
+		// Damit die Daten dargestellt werden können muss ein Websocket geöffnet werden, der bei jeder neuen Nachricht die Daten aus dieser Nachricht rausholt und visualisiert.
+		var dataSocket = ;
+
+
+		dataSocket.onopen = function(){  
+        		console.log("connected"); 
+      		}; 
+
+		dataSocket.onmessage = function(evt) {
+			// Aufgabe 4
+			// Die empfangenen Daten müssen an die Charts weitergegeben werden.
+		};
+
+		dataSocket.onclose = function(evt) {
+			console.log("disconnected"); 
+		};
+		
+
+		// Aufgabe 4
+		//
+		// Für jeden Datensatz muss ein eine SmoothieChart in einem vorher definierten canvas-Element erstellt werden.
+	</script>
+
+  </body>
+</html>
