@@ -133,6 +133,11 @@ class Infrared(object):
     #
     # Der Spannungswert soll in einen Distanzwert umgerechnet werden.
     def get_distance(self):
+        '''
+        Der Wertebereich der Spannung liegt zwischen 0x00 (0 Volt) und 0xFF (5 Volt).
+        Der Spannungswert entspricht Distanzen zwischen 10cm und 80cm.
+        
+        '''
         return 0
 
 
@@ -240,8 +245,7 @@ if __name__ == "__main__":
     encoder_pin = 23
 
     # Aufgabe 1
-    #
-    # Tragen Sie die i2c Adressen der Sensoren hier ein
+    # ToDo: Tragen Sie die i2c Adressen der Sensoren hier ein
 
     # The i2c addresses of front and rear ultrasound sensors
     ultrasonic_front_i2c_address = 0x00;
