@@ -1,3 +1,3 @@
-sudo i2cdecect -l
+sudo i2cdetect -l
 
-sudo i2cdecect -y 2
+sudo i2cdetect -y 2
