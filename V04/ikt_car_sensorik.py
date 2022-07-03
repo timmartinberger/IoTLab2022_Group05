@@ -73,10 +73,11 @@ class UltrasonicThread(threading.Thread):
     #
     # Hier muss der Thread initialisiert werden.
     def __init__(self, address):
+        threading.Thread.__init__(self)
         self.us = Ultrasonic(address)
         self.stopped = False
-        self.run()
-        return 0
+        self.setDaemon(True)
+        self.start()
 
     # Aufgabe 4
     #
@@ -121,10 +122,11 @@ class CompassThread(threading.Thread):
     #
     # Hier muss der Thread initialisiert werden.
     def __init__(self, address):
+        threading.Thread.__init__(self)
         self.compass = Compass(address)
         self.stopped = False
-        self.run()
-        return 0
+        self.setDaemon(True)
+        self.start()
 
     # Aufgabe 4
     #
@@ -181,11 +183,12 @@ class InfraredThread(threading.Thread):
     #
     # Hier muss der Thread initialisiert werden.
     def __init__(self, address, encoder=None):
+        threading.Thread.__init__(self)
         self.infrared = Infrared(address)
         self.encoder = encoder
         self.stopped = False
-        self.run()
-        return 0
+        self.setDaemon(True)
+        self.start()
 
     def run(self):
         while not self.stopped:
@@ -198,7 +201,6 @@ class InfraredThread(threading.Thread):
     # Diese Methode soll den Infrarotwert aktuell halten
     def read_infrared_value(self):
         self.distance = self.infrared.get_distance()
-        return 0
 
     # Aufgabe 5
     # ToDo
@@ -259,10 +261,11 @@ class EncoderThread(threading.Thread):
     #
     # Hier muss der Thread initialisiert werden.
     def __init__(self, encoder):
+        threading.Thread.__init__(self)
         self.encoder = encoder
         self.stopped = False
-        self.run()
-        return 0
+        self.setDaemon(True)
+        self.start()
 
     def run(self):
         while not self.stopped:
@@ -276,7 +279,6 @@ class EncoderThread(threading.Thread):
         prev_distance = self.distance
         self.distance = self.encoder.get_travelled_dist()
         speed = (self.distance - prev_distance) / 0.1
-        return 0
 
     def stop(self):
         self.stopped = True
@@ -307,7 +309,8 @@ if __name__ == "__main__":
 # Aufgabe 6
 # Hier sollen saemtlichen Messwerte periodisch auf der Konsole ausgegeben werden.
     # Threads erstellen
-    encoder_thread = EncoderThread()
+    encoder = Encoder(encoder_pin)
+    encoder_thread = EncoderThread(encoder)
     us_front_thread = UltrasonicThread(ultrasonic_front_i2c_address)
     us_rear_thread = UltrasonicThread(ultrasonic_rear_i2c_address)
     compass_thread = CompassThread(compass_i2c_address)
@@ -324,7 +327,6 @@ if __name__ == "__main__":
             obstacle_back = us_rear_thread.distance
             obstacle_side = infrared_thread.distance
             brightness_front = us_front_thread.brightness
-            brightness_back = us_rear_thread.brightness
             parking_slot = infrared_thread.parking_space_length
             print(f"Status t={t}:\n\
             zurückgelegte Strecke: {dist}m\n\
@@ -333,7 +335,7 @@ if __name__ == "__main__":
             Distanz bis Hindernis vorne: {obstacle_front}m\n\
             Distanz bis Hindernis hinten: {obstacle_back}m\n\
             Distanz bis Hindernis seitlich: {obstacle_side}m\n\
-            Helligkeit: vorne={brightness_front}, hinten={brightness_back}\n\
+            Helligkeit vorne: {brightness_front}\n\
             Länge der Parklücke: {parking_slot}m\n\n")
             sleep(1)
             t += 1 

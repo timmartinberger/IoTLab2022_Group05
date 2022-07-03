@@ -32,7 +32,22 @@
 
 	<!--Aufgabe 4-->
 	<!--Für jeden Datensatz muss eine Zeichenfläche 'canvas' definiert werden-->
-
+	Zurückgelegte Strecke:<br>
+	<canvas class= "canvas" id= "distance" width= "200" height= "100" ></canvas>
+	Geschwindigkeit:<br>
+	<canvas class= "canvas" id= "speed" width= "200" height= "100" ></canvas>
+	Ausrichtung:<br>
+	<canvas class= "canvas" id= "orientation" width= "200" height= "100" ></canvas>
+	Ultraschall (vorne):
+	<canvas class= "canvas" id= "obstcl_front" width= "200" height= "100" ></canvas>
+	Ultraschall (hinten):<br>
+	<canvas class= "canvas" id= "obstcl_back" width= "200" height= "100" ></canvas>
+	Infrarot (seitlich):<br>
+	<canvas class= "canvas" id= "obstcle_side" width= "200" height= "100" ></canvas>
+	Helligkeit:<br>
+	<canvas class= "canvas" id= "brightness" width= "200" height= "100" ></canvas>
+	Größe der Parklücke:<br>
+	<canvas class= "canvas" id= "parking_slot" width= "200" height= "100" ></canvas>
 
 	<!--Einparken -->
 	<!--Es müssen Knöpfe zum Starten und Stoppen des Parkvorgangs definiert werden-->
@@ -40,17 +55,24 @@
 	<script type="text/javascript">
 		// Aufgabe 4
 		//
-		// Damit die Daten dargestellt werden können muss ein Websocket geöffnet werden, der bei jeder neuen Nachricht die Daten aus dieser Nachricht rausholt und visualisiert.
-		var dataSocket = ;
+		// Damit die Daten dargestellt werden können muss ein Websocket geöffnet werden, der bei jeder neuen Nachricht die Daten aus dieser Nachricht rausholt und visualisiert.;
+		var dataSocket = new WebSocket("ws://192.168.0.179:8081/ws");
 
 
 		dataSocket.onopen = function(){  
         		console.log("connected"); 
+				dataSocket.send('connection established')
       		}; 
 
 		dataSocket.onmessage = function(evt) {
 			// Aufgabe 4
 			// Die empfangenen Daten müssen an die Charts weitergegeben werden.
+			// evt.data == { "range_f" : "value" , "range_r" : "value" }
+			console.log(evt.data);
+			alert("new message")
+			dataSocket.send('Message received!');
+			var msg = JSON.parse(evt.data);
+			range_r.append(new Date().getTime(), parseFloat(msg.range_r));
 		};
 
 		dataSocket.onclose = function(evt) {
@@ -61,6 +83,12 @@
 		// Aufgabe 4
 		//
 		// Für jeden Datensatz muss ein eine SmoothieChart in einem vorher definierten canvas-Element erstellt werden.
+		var distanceChart = new SmoothieChart({ minValue: 0, maxValue: 300,grid: { strokeStyle: 'rgb(125, 0, 0)', 
+							fillStyle: 'rgb(60, 0, 0)',lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
+		
+		var range_r = new TimeSeries();
+		distanceChart.addTimeSeries(range_r);
+		distensChart.streamTo(document.getElementById( "range_rChart" ), 100);
 	</script>
 
   </body>
