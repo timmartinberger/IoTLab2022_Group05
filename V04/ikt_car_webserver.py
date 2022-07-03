@@ -1,4 +1,5 @@
 ﻿#!/usr/bin/python
+#from requests import options
 import tornado.httpserver
 import tornado.ioloop
 import tornado.options
@@ -9,13 +10,21 @@ import json
 
 import threading
 from ikt_car_sensorik import *
-import _servo_ctrl
+#import _servo_ctrl
 from math import acos, sqrt, degrees
 
 
 # Aufgabe 4
 #
 # Der Tornado Webserver soll die Datei index.html am Port 8081 zur Verfügung stellen
+from tornado.options import define, options
+define("port", default=8081, help="run on given port", type=int)
+
+class IndexHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.render("index.html")
+
 
 # Aufgabe 3
 #
@@ -23,16 +32,24 @@ from math import acos, sqrt, degrees
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     '''Definition der Operationen des WebSocket Servers'''
 
-    print "hello WebSocketHandler"
+    print("hello WebSocketHandler")
 
     def open(self):
+        print(f"new connection: {self.request.remote_ip}")
+        clients.append(self)
         return 0
 
     def on_message(self, message):
+        json_message = {}
+        json_message["response"] = message
+        json_message = json.dumps(json_message)
+        self.write_message(json_message)
+        print(f"message received: {message}")
         return 0
 
     def on_close(self):
-        return 0
+        print("closed connection")
+        clients.remove[self]
 
 
 class DataThread(threading.Thread):
@@ -83,7 +100,16 @@ class DrivingThread(threading.Thread):
 
 
 if __name__ == "__main__":
-    print "Main Thread started"
+    print("Main Thread started")
+    clients = []
+    tornado.options.parse_command_line()
+    app = tornado.web.Application(handlers=[(r"/ws", WebSocketHandler), (r"/", IndexHandler), (r'/(.*)', tornado.web.StaticFileHandler, {'path': os.path.dirname(__file__)}),])
+    httpServer = tornado.httpserver.HTTPServer(app)
+    httpServer.listen(options.port)
+    tornado.ioloop.IOLoop.instance().start()
+
+
+
 # Aufgabe 3
 #
 # Erstellen und starten Sie hier eine Instanz des DataThread und starten Sie den Webserver .
