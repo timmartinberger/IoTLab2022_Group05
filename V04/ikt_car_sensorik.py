@@ -1,7 +1,10 @@
 #!/usr/bin/python
+# -*- coding: UTF-8 -*-
 import os
 from time import time, sleep
 import threading
+import sys
+from turtle import speed
 import RPi.GPIO as GPIO
 import smbus
 import math
@@ -47,8 +50,8 @@ class Ultrasonic():
     #
     # Diese Methode soll die Entfernung auslesen und zurueckgeben.
     def get_distance(self):
-        range_High_Byte = bus.read_byte_data(address_SRF_v, 0x02)  # höherwertiges Byte
-        range_Low_Byte = bus.read_byte_data(address_SRF_v, 0x03)  # niederwertiges Byte
+        range_High_Byte = bus.read_byte_data(self.address, 0x02)  # höherwertiges Byte
+        range_Low_Byte = bus.read_byte_data(self.address, 0x03)  # niederwertiges Byte
 
         return combine_high_low(range_High_Byte, range_Low_Byte)
 
@@ -70,6 +73,9 @@ class UltrasonicThread(threading.Thread):
     #
     # Hier muss der Thread initialisiert werden.
     def __init__(self, address):
+        self.us = Ultrasonic(address)
+        self.stopped = False
+        self.run()
         return 0
 
     # Aufgabe 4
@@ -77,7 +83,9 @@ class UltrasonicThread(threading.Thread):
     # Schreiben Sie die Messwerte in die lokalen Variablen
     def run(self):
         while not self.stopped:
-            continue
+            self.brightness = self.us.get_brightness()
+            self.distance = self.us.get_distance()
+            sleep(0.1)
 
     def stop(self):
         self.stopped = True
@@ -113,6 +121,9 @@ class CompassThread(threading.Thread):
     #
     # Hier muss der Thread initialisiert werden.
     def __init__(self, address):
+        self.compass = Compass(address)
+        self.stopped = False
+        self.run()
         return 0
 
     # Aufgabe 4
@@ -120,7 +131,8 @@ class CompassThread(threading.Thread):
     # Diese Methode soll den Kompasswert aktuell halten.
     def run(self):
         while not self.stopped:
-            continue
+            self.bearing = self.compass.get_bearing()
+            sleep(0.1)
 
     def stop(self):
         self.stopped = True
@@ -140,14 +152,20 @@ class Infrared(object):
     #
     # In dieser Methode soll der gemessene Spannungswert des Infrarotsensors ausgelesen werden.
     def get_voltage(self):
-        distance_IR_voltage = bus.read_byte(address_IR)
+        distance_IR_voltage = bus.read_byte(self.address)
         return distance_IR_voltage
 
     # Aufgabe 3
     #
     # Der Spannungswert soll in einen Distanzwert umgerechnet werden.
     def get_distance(self):
-        return 0
+        '''
+        Der Wertebereich der Spannung liegt zwischen 0x00 (0 Volt) und 0xFF (5 Volt).
+        Der Spannungswert entspricht Distanzen zwischen 10cm und 80cm.
+        '''
+        voltage = int.from_bytes(self.get_voltage(), "big")
+        voltage = 10 + (voltage / 255) * 70
+
 
 
 class InfraredThread(threading.Thread):
@@ -163,21 +181,27 @@ class InfraredThread(threading.Thread):
     #
     # Hier muss der Thread initialisiert werden.
     def __init__(self, address, encoder=None):
+        self.infrared = Infrared(address)
+        self.encoder = encoder
+        self.stopped = False
+        self.run()
         return 0
 
     def run(self):
         while not self.stopped:
-            read_infrared_value()
-            calculate_parking_space_length()
+            self.read_infrared_value()
+            self.calculate_parking_space_length()
+            sleep(0.1)
 
     # Aufgabe 4
     #
     # Diese Methode soll den Infrarotwert aktuell halten
     def read_infrared_value(self):
+        self.distance = self.infrared.get_distance()
         return 0
 
     # Aufgabe 5
-    #
+    # ToDo
     # Hier soll die Berechnung der Laenge der Parkluecke definiert werden
     def calculate_parking_space_length(self):
         return 0
@@ -194,7 +218,7 @@ class Encoder(object):
     ''' This class is responsible for handling encoder data '''
 
     # number of encoder steps
-    count = 16.0
+    count = 32.0
 
     # Aufgabe 2
     #
@@ -212,20 +236,20 @@ class Encoder(object):
     #
     # Jeder Flankenwechsel muss zur Berechnung der Entfernung gezaehlt werden.
     # Definieren Sie alle dazu noetigen Methoden.
-    def count(channel):
+    def count(self, channel):
         self.steps_travelled += 1
 
     # Aufgabe 2
     #
     # Diese Methode soll die gesamte zurueckgelegte Distanz zurueckgeben.
     def get_travelled_dist(self):
-        return self.steps_travelled * STEP_LENGTH
+        return self.steps_travelled * self.STEP_LENGTH
 
 
 class EncoderThread(threading.Thread):
     ''' Thread-class for holding speed and distance data of all encoders'''
 
-    # current speed.
+    # current speed in m/s.
     speed = 0
 
     # currently traversed distance.
@@ -235,16 +259,23 @@ class EncoderThread(threading.Thread):
     #
     # Hier muss der Thread initialisiert werden.
     def __init__(self, encoder):
+        self.encoder = encoder
+        self.stopped = False
+        self.run()
         return 0
 
     def run(self):
         while not self.stopped:
-            get_values()
+            self.get_values()
+            sleep(0.1)
 
     # Aufgabe 4
-    #
+    # 
     # Diese Methode soll die aktuelle Geschwindigkeit sowie die zurueckgelegte Distanz aktuell halten.
     def get_values(self):
+        prev_distance = self.distance
+        self.distance = self.encoder.get_travelled_dist()
+        speed = (self.distance - prev_distance) / 0.1
         return 0
 
     def stop(self):
@@ -261,8 +292,7 @@ if __name__ == "__main__":
     GPIO.setup(encoder_pin, GPIO.IN)
 
     # Aufgabe 1
-    #
-    # Tragen Sie die i2c Adressen der Sensoren hier ein
+    # ToDo: Tragen Sie die i2c Adressen der Sensoren hier ein
 
     # The i2c addresses of front and rear ultrasound sensors
     ultrasonic_front_i2c_address = 0x00;
@@ -275,5 +305,41 @@ if __name__ == "__main__":
     infrared_i2c_address = 0x00
 
 # Aufgabe 6
-#
 # Hier sollen saemtlichen Messwerte periodisch auf der Konsole ausgegeben werden.
+    # Threads erstellen
+    encoder_thread = EncoderThread()
+    us_front_thread = UltrasonicThread(ultrasonic_front_i2c_address)
+    us_rear_thread = UltrasonicThread(ultrasonic_rear_i2c_address)
+    compass_thread = CompassThread(compass_i2c_address)
+    infrared_thread = InfraredThread(infrared_i2c_address, encoder_thread)
+
+    try:
+        prev_dist = 0
+        t = 0
+        while(1):
+            dist = encoder_thread.distance
+            car_speed = encoder_thread.speed
+            direction = compass_thread.bearing
+            obstacle_front = us_front_thread.distance
+            obstacle_back = us_rear_thread.distance
+            obstacle_side = infrared_thread.distance
+            brightness_front = us_front_thread.brightness
+            brightness_back = us_rear_thread.brightness
+            parking_slot = infrared_thread.parking_space_length
+            print(f"Status t={t}:\n\
+            zurückgelegte Strecke: {dist}m\n\
+            Geschwindigkeit: {car_speed}m/s\n\
+            Ausrichtung: {direction}\n\
+            Distanz bis Hindernis vorne: {obstacle_front}m\n\
+            Distanz bis Hindernis hinten: {obstacle_back}m\n\
+            Distanz bis Hindernis seitlich: {obstacle_side}m\n\
+            Helligkeit: vorne={brightness_front}, hinten={brightness_back}\n\
+            Länge der Parklücke: {parking_slot}m\n\n")
+            sleep(1)
+            t += 1 
+    except KeyboardInterrupt:
+        print('Program closed!')
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
