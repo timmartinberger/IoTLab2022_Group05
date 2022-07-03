@@ -80,13 +80,13 @@ class DataThread(threading.Thread):
         while not self.stopped:
             json_msg = {}
             # Todo: Change values to thread call
-            json_msg["distance"] = 1
-            json_msg["speed"] = 2
-            json_msg["orientation"] = 3 
+            json_msg["distance"] = 25
+            json_msg["speed"] = 40
+            json_msg["orientation"] = 225
             json_msg["obstcl_front"] = 4
-            json_msg["obstcl_back"] = 5
-            json_msg["obstcl_side"] = 6
-            json_msg["brightness"] = 7
+            json_msg["obstcl_back"] = 99
+            json_msg["obstcl_side"] = 119
+            json_msg["brightness"] = 71
             json_msg["parking_slot"] = 8
             json_msg = json.dumps(json_msg)
             for client in clients: 
