@@ -8,6 +8,7 @@ from turtle import speed
 import RPi.GPIO as GPIO
 import smbus
 import math
+import numpy as np
 
 GPIO.setmode(GPIO.BCM)
 
@@ -107,9 +108,8 @@ class Compass(object):
     #
     # Diese Methode soll den Kompasswert auslesen und zurueckgeben.
     def get_bearing(self):
-        bear_High_Byte = bus.read_byte_data(self.address, 2)  # höherwertiges Byte
-        bear_Low_Byte = bus.read_byte_data(self.address, 3)  # niederwertiges Byte
-
+        bear_High_Byte = bus.read_byte_data(self.address, 0x02)  # höherwertiges Byte
+        bear_Low_Byte = bus.read_byte_data(self.address, 0x03)  # niederwertiges Byte
         return combine_high_low(bear_High_Byte, bear_Low_Byte)
 
 
@@ -134,7 +134,7 @@ class CompassThread(threading.Thread):
     # Diese Methode soll den Kompasswert aktuell halten.
     def run(self):
         while not self.stopped:
-            self.bearing = self.compass.get_bearing()
+            self.bearing = self.compass.get_bearing() / 10
             sleep(0.1)
 
     def stop(self):
@@ -166,10 +166,12 @@ class Infrared(object):
         Der Wertebereich der Spannung liegt zwischen 0x00 (0 Volt) und 0xFF (5 Volt).
         Der Spannungswert entspricht Distanzen zwischen 10cm und 80cm.
         '''
+        v_measurements = [22, 35, 44, 59, 72, 85, 95, 107, 124, 133]
+        d_measurements = [80, 50, 40, 28, 20, 16, 14,  12,  10,   9]
+        
         voltage = self.get_voltage()
         # invert voltage
-        distance = 10 + (70 - (voltage / 255) * 70)
-        return distance
+        return np.interp(voltage, v_measurements, d_measurements)
 
 
 
@@ -234,7 +236,7 @@ class Encoder(object):
     def __init__(self, pin):
         self.pin = pin
         self.steps_travelled = 0
-        GPIO.add_event_detect(encoder_pin, GPIO.BOTH, callback=self.count, bouncetime=1)
+        GPIO.add_event_detect(self.pin, GPIO.BOTH, callback=self.count, bouncetime=1)
 
 
     # Aufgabe 2
