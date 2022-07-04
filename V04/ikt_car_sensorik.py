@@ -84,6 +84,7 @@ class UltrasonicThread(threading.Thread):
     # Schreiben Sie die Messwerte in die lokalen Variablen
     def run(self):
         while not self.stopped:
+            self.us.write(None)
             self.brightness = self.us.get_brightness()
             self.distance = self.us.get_distance()
             sleep(0.1)
@@ -165,8 +166,10 @@ class Infrared(object):
         Der Wertebereich der Spannung liegt zwischen 0x00 (0 Volt) und 0xFF (5 Volt).
         Der Spannungswert entspricht Distanzen zwischen 10cm und 80cm.
         '''
-        voltage = int.from_bytes(self.get_voltage(), "big")
-        voltage = 10 + (voltage / 255) * 70
+        voltage = self.get_voltage()
+        # invert voltage
+        distance = 10 + (70 - (voltage / 255) * 70)
+        return distance
 
 
 
@@ -297,14 +300,14 @@ if __name__ == "__main__":
     # ToDo: Tragen Sie die i2c Adressen der Sensoren hier ein
 
     # The i2c addresses of front and rear ultrasound sensors
-    ultrasonic_front_i2c_address = 0x00;
-    ultrasonic_rear_i2c_address = 0x00;
+    ultrasonic_front_i2c_address = 0x70
+    ultrasonic_rear_i2c_address = 0x71
 
     # The i2c address of the compass sensor
-    compass_i2c_address = 0x00
+    compass_i2c_address = 0x60
 
     # The i2c address of the infrared sensor
-    infrared_i2c_address = 0x00
+    infrared_i2c_address = 0x4f
 
 # Aufgabe 6
 # Hier sollen saemtlichen Messwerte periodisch auf der Konsole ausgegeben werden.
@@ -331,12 +334,12 @@ if __name__ == "__main__":
             print(f"Status t={t}:\n\
             zurückgelegte Strecke: {dist}m\n\
             Geschwindigkeit: {car_speed}m/s\n\
-            Ausrichtung: {direction}\n\
-            Distanz bis Hindernis vorne: {obstacle_front}m\n\
-            Distanz bis Hindernis hinten: {obstacle_back}m\n\
-            Distanz bis Hindernis seitlich: {obstacle_side}m\n\
+            Ausrichtung: {direction / 10.0}\n\
+            Distanz bis Hindernis vorne: {obstacle_front}cm\n\
+            Distanz bis Hindernis hinten: {obstacle_back}cm\n\
+            Distanz bis Hindernis seitlich: {round(obstacle_side, 1)}cm\n\
             Helligkeit vorne: {brightness_front}\n\
-            Länge der Parklücke: {parking_slot}m\n\n")
+            Länge der Parklücke: {parking_slot}cm\n\n")
             sleep(1)
             t += 1 
     except KeyboardInterrupt:
