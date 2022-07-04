@@ -21,7 +21,7 @@
 		}
 		.grid_container{
 			display: grid;
-			grid-template-columns: auto auto auto;
+			grid-template-columns: auto auto;
 			padding: 10px;
 		}
 		#column {
@@ -44,40 +44,36 @@
 	<!--Für jeden Datensatz muss eine Zeichenfläche 'canvas' definiert werden-->
 	<div class="grid_container">
 		<div class="grid_item">
-			Zurückgelegte Strecke (in m):<br>
-			<canvas class= "canvas" id= "distance" width= "400" height= "150" ></canvas><br>
-		</div>
-		<div class="grid_item">
 			Geschwindigkeit (in m/s):<br>
-			<canvas class= "canvas" id= "speed" width= "400" height= "150" ></canvas><br>
+			<canvas class= "canvas" id= "speed" width= "600" height= "150" ></canvas><br>
 		</div>
 		<div class="grid_item">
 			Ausrichtung (in Grad):<br>
-			<canvas class= "canvas" id= "orientation" width= "400" height= "150" ></canvas><br>
+			<canvas class= "canvas" id= "orientation" width= "600" height= "150" ></canvas><br>
 		</div>
 		<div class="grid_item">
-			Ultraschall vorne (in m):<br>
-			<canvas class= "canvas" id= "obstcl_front" width= "400" height= "150" ></canvas><br>
+			Ultraschall vorne (in cm):<br>
+			<canvas class= "canvas" id= "obstcl_front" width= "600" height= "150" ></canvas><br>
 		</div>
 		<div class="grid_item">
-			Ultraschall hinten (in m):<br>
-			<canvas class= "canvas" id= "obstcl_back" width= "400" height= "150" ></canvas><br>
+			Ultraschall hinten (in cm):<br>
+			<canvas class= "canvas" id= "obstcl_back" width= "600" height= "150" ></canvas><br>
 		</div>
 		<div class="grid_item">
-			Infrarot seitlich (in m):<br>
-			<canvas class= "canvas" id= "obstcle_side" width= "400" height= "150" ></canvas><br>
+			Infrarot seitlich (in cm):<br>
+			<canvas class= "canvas" id= "obstcle_side" width= "600" height= "150" ></canvas><br>
 		</div>
 		<div class="grid_item">
 			Helligkeit:<br>
-			<canvas class= "canvas" id= "brightness" width= "400" height= "150" ></canvas><br>
+			<canvas class= "canvas" id= "brightness" width= "600" height= "150" ></canvas><br>
 		</div>
 		<div class="grid_item">
-			Größe der Parklücke (in m):<br>
-			<canvas class= "canvas" id= "parking_slot" width= "400" height= "150" ></canvas>
+			Länge der Parklücke (in cm):<br>
+			<canvas class= "canvas" id= "parking_slot" width= "600" height= "150" ></canvas>
 		</div>
 		<div class="grid_item">
-			<button>Start Parking</button>
-			<button>Stop Parking</button>
+			<button onclick="startParking()">Start Parking</button>
+			<button onclick="stopParking()">Stop Parking</button>
 		</div>
 	</div>
 	<!--Einparken -->
@@ -99,10 +95,9 @@
 			// Aufgabe 4
 			// Die empfangenen Daten müssen an die Charts weitergegeben werden.
 			// evt.data == { "range_f" : "value" , "range_r" : "value" }
-			//console.log(evt.data);
+			console.log(evt.data);
 			//dataSocket.send('Message received!');
 			var msg = JSON.parse(evt.data);
-			distTS.append(new Date().getTime(), parseFloat(msg.distance));
 			speedTS.append(new Date().getTime(), parseFloat(msg.speed));
 			orientTS.append(new Date().getTime(), parseFloat(msg.orientation));
 			usFrontTS.append(new Date().getTime(), parseFloat(msg.obstcl_front));
@@ -120,63 +115,66 @@
 		// Aufgabe 4
 		// Todo: Min & Max Value anpassen
 		// Für jeden Datensatz muss ein eine SmoothieChart in einem vorher definierten canvas-Element erstellt werden.
-		// Distanz
-		var distanceChart = new SmoothieChart({ minValue: 0, maxValue: 300,grid: { strokeStyle: 'rgb(125, 0, 0)', 
-							fillStyle: 'rgb(60, 0, 0)',lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
-		
-		var distTS = new TimeSeries();
-		distanceChart.addTimeSeries(distTS);
-		distanceChart.streamTo(document.getElementById( "distance" ), 100);
+
 		// Speed
-		var speedChart = new SmoothieChart({ minValue: 0, maxValue: 300,grid: { strokeStyle: 'rgb(125, 0, 0)', 
+		var speedChart = new SmoothieChart({ minValue: 0, maxValue: 10,grid: { strokeStyle: 'rgb(125, 0, 0)',
 							fillStyle: 'rgb(60, 0, 0)',lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
 		
 		var speedTS = new TimeSeries();
 		speedChart.addTimeSeries(speedTS);
 		speedChart.streamTo(document.getElementById( "speed" ), 100);
 		// Orientation
-		var orientChart = new SmoothieChart({ minValue: 0, maxValue: 300,grid: { strokeStyle: 'rgb(125, 0, 0)', 
+		var orientChart = new SmoothieChart({ minValue: 0, maxValue: 360,grid: { strokeStyle: 'rgb(125, 0, 0)',
 							fillStyle: 'rgb(60, 0, 0)',lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
 		
 		var orientTS = new TimeSeries();
 		orientChart.addTimeSeries(orientTS);
 		orientChart.streamTo(document.getElementById( "orientation" ), 100);	
 		// Ultraschall vorne
-		var usFrontChart = new SmoothieChart({ minValue: 0, maxValue: 300,grid: { strokeStyle: 'rgb(125, 0, 0)', 
+		var usFrontChart = new SmoothieChart({ minValue: 0, maxValue: 200,grid: { strokeStyle: 'rgb(125, 0, 0)',
 							fillStyle: 'rgb(60, 0, 0)',lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
 		
 		var usFrontTS = new TimeSeries();
 		usFrontChart.addTimeSeries(usFrontTS);
 		usFrontChart.streamTo(document.getElementById( "obstcl_front" ), 100);	
 		// Ultrashall hinten
-		var usBackChart = new SmoothieChart({ minValue: 0, maxValue: 300,grid: { strokeStyle: 'rgb(125, 0, 0)', 
+		var usBackChart = new SmoothieChart({ minValue: 0, maxValue: 200,grid: { strokeStyle: 'rgb(125, 0, 0)',
 							fillStyle: 'rgb(60, 0, 0)',lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
 		
 		var usBackTS = new TimeSeries();
 		usBackChart.addTimeSeries(usBackTS);
 		usBackChart.streamTo(document.getElementById( "obstcl_back" ), 100);	
 		// Infrarot
-		var irChart = new SmoothieChart({ minValue: 0, maxValue: 300,grid: { strokeStyle: 'rgb(125, 0, 0)', 
+		var irChart = new SmoothieChart({ minValue: 0, maxValue: 100,grid: { strokeStyle: 'rgb(125, 0, 0)',
 							fillStyle: 'rgb(60, 0, 0)',lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
 		
 		var irTS = new TimeSeries();
 		irChart.addTimeSeries(irTS);
 		irChart.streamTo(document.getElementById( "obstcle_side" ), 100);	
 		// Helligkeit
-		var brightnessChart = new SmoothieChart({ minValue: 0, maxValue: 300,grid: { strokeStyle: 'rgb(125, 0, 0)', 
+		var brightnessChart = new SmoothieChart({ minValue: 0, maxValue: 250,grid: { strokeStyle: 'rgb(125, 0, 0)',
 							fillStyle: 'rgb(60, 0, 0)',lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
 		
 		var brightnessTS = new TimeSeries();
 		brightnessChart.addTimeSeries(brightnessTS);
 		brightnessChart.streamTo(document.getElementById( "brightness" ), 100);	
 		// Parklücke
-		var pslotChart = new SmoothieChart({ minValue: 0, maxValue: 300,grid: { strokeStyle: 'rgb(125, 0, 0)', 
+		var pslotChart = new SmoothieChart({ minValue: 0, maxValue: 100,grid: { strokeStyle: 'rgb(125, 0, 0)',
 							fillStyle: 'rgb(60, 0, 0)',lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
 		
 		var pslotTS = new TimeSeries();
 		pslotChart.addTimeSeries(pslotTS);
 		pslotChart.streamTo(document.getElementById( "parking_slot" ), 100);	
-	
+
+
+		// Buttons onClick-Funktionen
+		function startParking(){
+			dataSocket.send("startParking");
+		}
+
+		function stopParking(){
+			dataSocket.send("stopParking");
+		}
 	</script>
 
   </body>

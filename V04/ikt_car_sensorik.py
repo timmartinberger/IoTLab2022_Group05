@@ -9,6 +9,7 @@ import RPi.GPIO as GPIO
 import smbus
 import math
 import numpy as np
+from queue import Queue
 
 GPIO.setmode(GPIO.BCM)
 
@@ -85,10 +86,13 @@ class UltrasonicThread(threading.Thread):
     # Schreiben Sie die Messwerte in die lokalen Variablen
     def run(self):
         while not self.stopped:
-            self.us.write(None)
-            self.brightness = self.us.get_brightness()
-            self.distance = self.us.get_distance()
-            sleep(0.1)
+            try:
+                self.us.write(None)
+                self.brightness = self.us.get_brightness()
+                self.distance = self.us.get_distance()
+                sleep(0.1)
+            except IOError:
+                continue
 
     def stop(self):
         self.stopped = True
@@ -108,9 +112,9 @@ class Compass(object):
     #
     # Diese Methode soll den Kompasswert auslesen und zurueckgeben.
     def get_bearing(self):
-        bear_High_Byte = bus.read_byte_data(self.address, 0x02)  # höherwertiges Byte
-        bear_Low_Byte = bus.read_byte_data(self.address, 0x03)  # niederwertiges Byte
-        return combine_high_low(bear_High_Byte, bear_Low_Byte)
+        bear_High_Byte = bus.read_byte_data(self.address, 2)  # höherwertiges Byte
+        bear_Low_Byte = bus.read_byte_data(self.address, 3)  # niederwertiges Byte
+        return  combine_high_low(bear_High_Byte, bear_Low_Byte)
 
 
 class CompassThread(threading.Thread):
@@ -134,8 +138,11 @@ class CompassThread(threading.Thread):
     # Diese Methode soll den Kompasswert aktuell halten.
     def run(self):
         while not self.stopped:
-            self.bearing = self.compass.get_bearing() / 10
-            sleep(0.1)
+            try:
+                self.bearing = self.compass.get_bearing() / 10
+                sleep(0.1)
+            except IOError:
+                continue
 
     def stop(self):
         self.stopped = True
@@ -178,6 +185,12 @@ class Infrared(object):
 class InfraredThread(threading.Thread):
     ''' Thread-class for holding Infrared data '''
 
+    smoothing_size = 5
+    past_distances = Queue(maxsize=smoothing_size)
+
+    ps_start = None
+    ps_end = None
+
     # distance to an obstacle in cm
     distance = 0
 
@@ -197,21 +210,39 @@ class InfraredThread(threading.Thread):
 
     def run(self):
         while not self.stopped:
-            self.read_infrared_value()
-            self.calculate_parking_space_length()
-            sleep(0.1)
+            try:
+                self.read_infrared_value()
+                self.calculate_parking_space_length()
+                sleep(0.1)
+            except IOError:
+                continue
 
     # Aufgabe 4
     #
     # Diese Methode soll den Infrarotwert aktuell halten
     def read_infrared_value(self):
-        self.distance = self.infrared.get_distance()
+        distance = self.infrared.get_distance()
+        if self.past_distances.full():
+            self.past_distances.get()
+        self.past_distances.put(distance)
+        self.distance = self.avg_past_distances()
+
+    def avg_past_distances(self):
+        pd = np.array(list(self.past_distances.queue))
+        return np.average(pd)
 
     # Aufgabe 5
     # ToDo
     # Hier soll die Berechnung der Laenge der Parkluecke definiert werden
     def calculate_parking_space_length(self):
-        return 0
+        if self.ps_start is None and self.distance >= 25:
+            self.ps_start = self.encoder.distance
+        if self.ps_end is None and self.ps_start is not None and self.distance < 25:
+            self.ps_end = self.encoder.distance
+        if self.ps_start is not None and self.ps_end is not None:
+            self.parking_space_length = self.ps_end - self.ps_start
+            self.ps_start = None
+            self.ps_end = None
 
     def stop(self):
         self.stopped = True
@@ -225,12 +256,12 @@ class Encoder(object):
     ''' This class is responsible for handling encoder data '''
 
     # number of encoder steps
-    count = 32.0
+    count = 32
 
     # Aufgabe 2
     #
     # Wieviel cm betraegt ein einzelner Encoder-Schritt?
-    STEP_LENGTH = math.pi * 5 / count  # in cm
+    STEP_LENGTH = math.pi * 7 / count  # in cm
 
 
     def __init__(self, pin):
@@ -274,8 +305,11 @@ class EncoderThread(threading.Thread):
 
     def run(self):
         while not self.stopped:
-            self.get_values()
-            sleep(0.1)
+            try:
+                self.get_values()
+                sleep(0.1)
+            except IOError:
+                continue
 
     # Aufgabe 4
     # 
@@ -283,7 +317,7 @@ class EncoderThread(threading.Thread):
     def get_values(self):
         prev_distance = self.distance
         self.distance = self.encoder.get_travelled_dist()
-        speed = (self.distance - prev_distance) / 0.1
+        self.speed = (self.distance - prev_distance) / 10
 
     def stop(self):
         self.stopped = True
@@ -334,9 +368,9 @@ if __name__ == "__main__":
             brightness_front = us_front_thread.brightness
             parking_slot = infrared_thread.parking_space_length
             print(f"Status t={t}:\n\
-            zurückgelegte Strecke: {dist}m\n\
+            zurückgelegte Strecke: {dist/100.0}m\n\
             Geschwindigkeit: {car_speed}m/s\n\
-            Ausrichtung: {direction / 10.0}\n\
+            Ausrichtung: {direction}\n\
             Distanz bis Hindernis vorne: {obstacle_front}cm\n\
             Distanz bis Hindernis hinten: {obstacle_back}cm\n\
             Distanz bis Hindernis seitlich: {round(obstacle_side, 1)}cm\n\
