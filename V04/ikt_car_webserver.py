@@ -41,6 +41,10 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         clients.append(self)
 
     def on_message(self, message):
+        if message == "startParking":
+            drivingThread.start()
+        elif message == "stopParking":
+            drivingThread.stop()
         json_message = {}
         json_message["response"] = message
         json_message = json.dumps(json_message)
@@ -102,6 +106,8 @@ class DataThread(threading.Thread):
 class DrivingThread(threading.Thread):
     '''Thread zum Fahren des Autos'''
 
+    max_speed = 3.3
+
     # Einparken
     #
     # Hier muss der Thread initialisiert werden.
@@ -112,35 +118,87 @@ class DrivingThread(threading.Thread):
         self.stopped = False
         self.motor = carControl.Motor()
         self.steering = carControl.Steering()
-        self.start()
+        self.min_ps_length = self.get_parking_slot()
 
     # Einparken :
     # Definieren Sie einen Thread, der auf die ueber den Webserver erhaltenen Befehle reagiert und den Einparkprozess durchfuehrt
     def run(self):
+        print("executing")
+        self.motor.set_speed(self.max_speed)
         while not self.stopped:
-            self.motor.set_speed(3.5)
-            sleep(3)
+            
+        #    if self.check_ps_exists():
+         #       self.motor.stop()
+          #      self.continue_forward()
+           #     self.go_backward()
+            #    self.turn_until_angle_right()
+             #   self.turn_until_angle_left()
+              #  self.motor.stop()
+               # self.steering.set_angle(0)
+                #self.stopped = True
+            sleep(0.1)
 
+    def check_ps_exists(self):
+        ps_length = self.dataThread.infrared_thread.parking_space_length
+        return ps_length is not None and ps_length >= self.min_ps_length
 
+    def continue_forward(self):
+        distance_continued = 0
+        self.motor.set_speed(self.max_speed)
+        while distance_continued < 10:
+            distance_continued = self.dataThread.encoder_thread.distance - self.dataThread.infrared_thread.last_ps_end
+            sleep(0.1)
+        self.motor.stop()
 
+    def go_backward(self):
+        start_distance = self.dataThread.encoder_thread.distance
+        self.motor.set_speed(-self.max_speed)
+        distance_travelled = 0
+        while distance_travelled < 10:
+            distance_travelled = self.dataThread.encoder_thread.distance - start_distance
+            sleep(0.1)
+        self.motor.stop()
+
+    def turn_until_angle_right(self, angle):
+        start_angle = self.dataThread.compass_thread.bearing
+        self.steering.set_angle(45)
+        self.motor.set_speed(self.max_speed)
+        angle_change = 0
+        while angle_change < angle:
+            angle_change = abs(start_angle - self.dataThread.compass_thread.bearing)
+            sleep(0.1)
+        self.motor.stop()
+    
+    def turn_until_angle_left(self, angle):
+        start_angle = self.dataThread.compass_thread.bearing
+        self.steering.set_angle(-45)
+        self.motor.set_speed(self.max_speed)
+        angle_change = 0
+        while angle_change < angle:
+            angle_change = abs(start_angle - self.dataThread.compass_thread.bearing)
+            sleep(0.1)
+        self.motor.stop()
+        
     def get_parking_slot(self):
         # passt schon irgendwie
         w = 19.2
         r = 37.5
         f = 37.5
         b = 7
-        alpha = math.acos(1 - (infrared_thread.distance + w) / (2 * r))
+        alpha = math.acos(1 - (self.dataThread.infrared_thread.distance + w) / (2 * r))
         min_l = math.sqrt(2 * r * w + f**2) + b
         return min_l
 
     def stop(self):
+        print("Stopped driving!")
         self.stopped = True
+        self.motor.stop()
 
 
 if __name__ == "__main__":
     print("Main Thread started")
     # WICHTIG: DataThread und DrivingThread VOR Initialisierung des httpServers starten!
-    encoder_pin = 18
+    encoder_pin = 23
     GPIO.setup(encoder_pin, GPIO.IN)
     # The i2c addresses of front and rear ultrasound sensors
     ultrasonic_front_i2c_address = 0x70

@@ -4,7 +4,6 @@ import os
 from time import time, sleep
 import threading
 import sys
-from turtle import speed
 import RPi.GPIO as GPIO
 import smbus
 import math
@@ -191,6 +190,8 @@ class InfraredThread(threading.Thread):
     ps_start = None
     ps_end = None
 
+    last_ps_end = None
+
     # distance to an obstacle in cm
     distance = 0
 
@@ -241,6 +242,7 @@ class InfraredThread(threading.Thread):
             self.ps_end = self.encoder.distance
         if self.ps_start is not None and self.ps_end is not None:
             self.parking_space_length = self.ps_end - self.ps_start
+            self.last_ps_end = self.ps_end
             self.ps_start = None
             self.ps_end = None
 
